@@ -147,6 +147,9 @@ set -e
 set -x
 
 echo Args passed: [[ $@ ]]
+echo "Cloning Contiv-VPP repo..."
+cd /home/vagrant; git clone https://github.com/contiv/vpp.git
+cd /home/vagrant/vpp; git checkout ons-demo
 
 # --------------------------------------------------------
 # ---> Create token and export it with kube master IP <---
@@ -170,7 +173,7 @@ source /home/vagrant/.profile
 sed -i '4 a Environment="KUBELET_EXTRA_ARGS=--node-ip=$KUBE_MASTER_IP"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 systemctl daemon-reload
 systemctl restart kubelet
-curl --silent https://raw.githubusercontent.com/contiv/vpp/master/k8s/contiv-vpp.yaml > /tmp/contiv-vpp.yaml
+curl --silent https://raw.githubusercontent.com/contiv/vpp/ons-demo/k8s/demo/ons2018/sfc-vpp.yaml > /tmp/contiv-vpp.yaml
 POD_SUBNET_CIDR=$(grep -A0 'PodSubnetCIDR:' /tmp/contiv-vpp.yaml | tail -n1 | awk '{ print $2}')
 echo "$(kubeadm init --token-ttl 0 --pod-network-cidr="${POD_SUBNET_CIDR}" --apiserver-advertise-address="${KUBE_MASTER_IP}" --token="${KUBEADM_TOKEN}")" >> /vagrant/config/cert
 
@@ -183,10 +186,8 @@ echo "Installing Contiv-VPP networking as user"
 sudo -u vagrant -H bash << EOF
 
 echo "Installing Pod Network..."
-kubectl apply -f https://raw.githubusercontent.com/contiv/vpp/master/k8s/contiv-vpp.yaml
+kubectl apply -f https://raw.githubusercontent.com/contiv/vpp/ons-demo/k8s/demo/ons2018/sfc-vpp.yaml
 
-echo "Schedule Pods on master"
-kubectl taint nodes --all node-role.kubernetes.io/master-
 EOF
 SCRIPT
 
